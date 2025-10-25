@@ -114,4 +114,6 @@ groups:
         annotations:
           summary: "<span style="color: #F44336;">High memory usage on {{ $labels.instance }}</span>"
           description: "<span style="color: #9C27B0;">Memory usage is above 85% for more than 5 minutes</span>"
+
+
 <p style="color: #2196F3; font-weight: bold;">🎯 Рекомендуем ознакомиться с <span style="color: #FF9800;">[подробным руководством](https://habr.com/ru/articles/709204/)</span> для более глубокого понимания работы стека мониторинга.</p>
