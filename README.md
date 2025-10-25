@@ -120,3 +120,7 @@ scrape_configs:
       job: 'application'
       group: 'services'
 # alerts/system.yml
+<span style="color: red;">Красный текст</span>
+<span style="color: #4CAF50;">Зеленый текст</span>
+<span style="color: blue;">Синий текст</span>
+<span style="color: #FF9800;">Оранжевый текст</span>
