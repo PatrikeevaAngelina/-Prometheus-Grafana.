@@ -30,20 +30,20 @@
 
 | Группа метрик | Метрика | Тип | Описание |
 |---------------|---------|-----|----------|
-| <span style="color: #4CAF50;">**🖥️ Системные**</span> | `node_cpu_seconds_total` | <span style="color: #FF9800;">Counter</span> | Суммарное время работы CPU в разных режимах |
-| | `node_memory_MemAvailable_bytes` | <span style="color: #4CAF50;">Gauge</span> | <span style="color: #2196F3;">Доступная оперативная память в байтах</span> |
-| | `node_filesystem_avail_bytes` | <span style="color: #4CAF50;">Gauge</span> | Свободное место на файловых системах |
-| | `node_load1` | <span style="color: #4CAF50;">Gauge</span> | Средняя загрузка системы за 1 минуту |
-| <span style="color: #9C27B0;">**📦 Контейнеры**</span> | `container_cpu_usage_seconds_total` | <span style="color: #FF9800;">Counter</span> | Использование CPU контейнерами |
+| <span style="color: #4CAF50;">**🖥️ Системные**</span> | `node_cpu_seconds_total` | <span style="color: #FF9800;">Counter</span> | <span style="color: #2196F3;">Суммарное время работы CPU в разных режимах</span> |
+| | `node_memory_MemAvailable_bytes` | <span style="color: #4CAF50;">Gauge</span> | <span style="color: #F44336;">Доступная оперативная память в байтах</span> |
+| | `node_filesystem_avail_bytes` | <span style="color: #4CAF50;">Gauge</span> | <span style="color: #9C27B0;">Свободное место на файловых системах</span> |
+| | `node_load1` | <span style="color: #4CAF50;">Gauge</span> | <span style="color: #2196F3;">Средняя загрузка системы за 1 минуту</span> |
+| <span style="color: #9C27B0;">**📦 Контейнеры**</span> | `container_cpu_usage_seconds_total` | <span style="color: #FF9800;">Counter</span> | <span style="color: #4CAF50;">Использование CPU контейнерами</span> |
 | | `container_memory_usage_bytes` | <span style="color: #4CAF50;">Gauge</span> | <span style="color: #F44336;">Использование памяти контейнерами</span> |
-| | `container_network_receive_bytes_total` | <span style="color: #FF9800;">Counter</span> | Входящий сетевой трафик |
-| <span style="color: #2196F3;">**🌐 Веб-сервисы**</span> | `http_requests_total` | <span style="color: #FF9800;">Counter</span> | Общее количество HTTP запросов |
-| | `up` | <span style="color: #4CAF50;">Gauge</span> | <span style="color: #4CAF50;">Статус доступности сервиса</span> |
+| | `container_network_receive_bytes_total` | <span style="color: #FF9800;">Counter</span> | <span style="color: #2196F3;">Входящий сетевой трафик</span> |
+| <span style="color: #2196F3;">**🌐 Веб-сервисы**</span> | `http_requests_total` | <span style="color: #FF9800;">Counter</span> | <span style="color: #4CAF50;">Общее количество HTTP запросов</span> |
+| | `up` | <span style="color: #4CAF50;">Gauge</span> | <span style="color: #F44336;">Статус доступности сервиса (1=up, 0=down)</span> |
 
 > <span style="color: #FF9800;">**Пояснения по типам метрик:**</span>
-> - <span style="color: #4CAF50;">**Gauge**</span> - текущее значение, которое может увеличиваться и уменьшаться
-> - <span style="color: #FF9800;">**Counter**</span> - монотонно возрастающий счетчик
-> - <span style="color: #9C27B0;">**Histogram**</span> - для измерения распределений и квантилей
+> - <span style="color: #4CAF50;">**Gauge**</span> - <span style="color: #4CAF50;">текущее значение, которое может увеличиваться и уменьшаться</span>
+> - <span style="color: #FF9800;">**Counter**</span> - <span style="color: #FF9800;">монотонно возрастающий счетчик</span>
+> - <span style="color: #9C27B0;">**Histogram**</span> - <span style="color: #9C27B0;">для измерения распределений и квантилей</span>
 
 ---
 
@@ -90,3 +90,26 @@ scrape_configs:
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
+# alerts/system.yml
+groups:
+  - name: system
+    rules:
+      # <span style="color: #F44336;">Alert при высокой загрузке CPU</span>
+      - alert: HighCpuUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: <span style="color: #FF9800;">warning</span>
+        annotations:
+          summary: "<span style="color: #F44336;">High CPU usage on {{ $labels.instance }}</span>"
+          description: "<span style="color: #FF9800;">CPU usage is above 80% for more than 5 minutes</span>"
+          
+      # <span style="color: #F44336;">Alert при нехватке памяти</span>
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: <span style="color: #F44336;">critical</span>
+        annotations:
+          summary: "<span style="color: #F44336;">High memory usage on {{ $labels.instance }}</span>"
+          description: "<span style="color: #9C27B0;">Memory usage is above 85% for more than 5 minutes</span>"
